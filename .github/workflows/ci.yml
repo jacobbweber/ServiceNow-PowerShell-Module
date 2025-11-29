@@ -13,10 +13,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PowerShell
-        uses: PowerShell/PowerShell@v1
-        with:
-          powerShell-version: '7.4'
+      - name: Check PowerShell version
+        run: pwsh -c "$PSVersionTable.PSVersion"
+        shell: pwsh
 
       - name: Install Pester
         run: |
@@ -44,10 +43,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PowerShell
-        uses: PowerShell/PowerShell@v1
-        with:
-          powerShell-version: '7.4'
+      - name: Check PowerShell version
+        run: pwsh -c "$PSVersionTable.PSVersion"
+        shell: pwsh
 
       - name: Publish to PowerShell Gallery (scaffold)
         run: |
