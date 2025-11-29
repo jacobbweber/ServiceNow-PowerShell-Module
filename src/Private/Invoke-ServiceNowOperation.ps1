@@ -120,18 +120,33 @@ function Set-ServiceNowToken {
     )
     # Prefer SecretManagement if available
     if (Get-Command -Name Set-Secret -ErrorAction SilentlyContinue) {
-        try {
-            $secure = ConvertTo-SecureString -String $Token -AsPlainText -Force
-            if ($PSBoundParameters.ContainsKey('Vault')) {
-                Set-Secret -Name 'ServiceNowToken' -Secret $secure -Vault $Vault -ErrorAction Stop
-            } else {
-                Set-Secret -Name 'ServiceNowToken' -Secret $secure -ErrorAction Stop
+            try {
+                # Build a SecureString from the plain string without using ConvertTo-SecureString -AsPlainText
+                if ($Token -is [System.Security.SecureString]) {
+                    $secure = $Token
+                } elseif ($Token -is [System.Management.Automation.PSCredential]) {
+                    $secure = $Token.GetNetworkCredential().Password | ForEach-Object {
+                        $ss = New-Object System.Security.SecureString
+                        foreach ($ch in $_.ToCharArray()) { $ss.AppendChar($ch) }
+                        $ss.MakeReadOnly()
+                        $ss
+                    }
+                } else {
+                    $ss = New-Object System.Security.SecureString
+                    foreach ($ch in $Token.ToCharArray()) { $ss.AppendChar($ch) }
+                    $ss.MakeReadOnly()
+                    $secure = $ss
+                }
+                if ($PSBoundParameters.ContainsKey('Vault')) {
+                    Set-Secret -Name 'ServiceNowToken' -Secret $secure -Vault $Vault -ErrorAction Stop
+                } else {
+                    Set-Secret -Name 'ServiceNowToken' -Secret $secure -ErrorAction Stop
+                }
+                Write-Output 'Stored token in SecretManagement vault.'
+                return
+            } catch {
+                Write-Warning "SecretManagement Set-Secret failed: $($_.Exception.Message)"
             }
-            Write-Output 'Stored token in SecretManagement vault.'
-            return
-        } catch {
-            Write-Warning "SecretManagement Set-Secret failed: $($_.Exception.Message)"
-        }
     }
     # Fallback: store in module settings (not secure)
     Set-ModuleSetting -Key 'Token' -Value $Token
