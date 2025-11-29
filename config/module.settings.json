@@ -1,0 +1,10 @@
+{
+  "InstanceBaseUri": "https://yourinstance.service-now.com",
+  "AuthMode": "Bearer",
+  "Defaults": {
+    "sysparm_limit": 100,
+    "TimeoutSec": 60,
+    "RetryCount": 3,
+    "RetryDelaySec": 2
+  }
+}

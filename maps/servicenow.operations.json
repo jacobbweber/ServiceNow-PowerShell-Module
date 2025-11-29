@@ -1,0 +1,58 @@
+{
+  "basePath": "/api/now",
+  "operations": {
+    "Change.Get": {
+      "path": "/table/change_request",
+      "method": "GET",
+      "auth": "Bearer",
+      "query": {
+        "sysparm_query": "number={number}",
+        "sysparm_fields": "number,sys_id,state,short_description",
+        "sysparm_limit": "{sysparm_limit}"
+      }
+    },
+    "Change.New": {
+      "path": "/table/change_request",
+      "method": "POST",
+      "auth": "Bearer",
+      "body": {
+        "short_description": "{short_description}",
+        "type": "{type}",
+        "assignment_group": "{assignment_group}"
+      }
+    },
+    "Change.Update": {
+      "path": "/table/change_request/{sys_id}",
+      "method": "PATCH",
+      "auth": "Bearer",
+      "body": {
+        "state": "{state}",
+        "work_notes": "{work_notes}"
+      }
+    },
+    "Change.Approve": {
+      "path": "/table/change_request/{sys_id}/approve",
+      "method": "POST",
+      "auth": "Bearer",
+      "body": {
+        "comments": "{comments}"
+      }
+    },
+    "Change.Deny": {
+      "path": "/table/change_request/{sys_id}/deny",
+      "method": "POST",
+      "auth": "Bearer",
+      "body": {
+        "comments": "{comments}"
+      }
+    },
+    "Change.Cancel": {
+      "path": "/table/change_request/{sys_id}/cancel",
+      "method": "POST",
+      "auth": "Bearer",
+      "body": {
+        "reason": "{reason}"
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: PowerShell/PowerShell@v1
+        with:
+          powerShell-version: '7.4'
+
+      - name: Install Pester
+        run: |
+          Install-Module -Name Pester -Force -Scope CurrentUser
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+        shell: pwsh
+
+      - name: Run PSScriptAnalyzer
+        run: |
+          Import-Module PSScriptAnalyzer
+          $errs = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Warning | Select-Object -Property Severity,RuleName,ScriptName,Line
+          if ($errs) { $errs | Format-Table -AutoSize; exit 1 }
+        shell: pwsh
+
+      - name: Run Pester tests
+        run: |
+          Invoke-Pester -Path tests -Output Detailed
+        shell: pwsh
+
+  publish:
+    needs: lint-and-test
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: PowerShell/PowerShell@v1
+        with:
+          powerShell-version: '7.4'
+
+      - name: Publish to PowerShell Gallery (scaffold)
+        run: |
+          # This is a scaffolded publish step. To enable, set secret PSGalleryApiKey in the repo settings.
+          if (-not $Env:PSGalleryApiKey) { Write-Host 'PSGalleryApiKey not set; skipping publish.'; exit 0 }
+          Publish-Module -Path . -NuGetApiKey $Env:PSGalleryApiKey -Force
+        shell: pwsh
