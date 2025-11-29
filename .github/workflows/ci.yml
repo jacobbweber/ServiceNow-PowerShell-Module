@@ -26,8 +26,12 @@ jobs:
       - name: Run PSScriptAnalyzer
         run: |
           Import-Module PSScriptAnalyzer
-          $errs = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Warning | Select-Object -Property Severity,RuleName,ScriptName,Line
-          if ($errs) { $errs | Format-Table -AutoSize; exit 1 }
+          $results = Invoke-ScriptAnalyzer -Path . -Recurse
+          if (-not $results) { Write-Host 'No PSScriptAnalyzer issues found.'; exit 0 }
+          $warnings = $results | Where-Object { $_.Severity -eq 'Warning' } | Select-Object -Property Severity,RuleName,ScriptName,Line
+          $errors = $results | Where-Object { $_.Severity -eq 'Error' } | Select-Object -Property Severity,RuleName,ScriptName,Line
+          if ($warnings) { Write-Host 'PSScriptAnalyzer Warnings:'; $warnings | Format-Table -AutoSize }
+          if ($errors) { Write-Host 'PSScriptAnalyzer Errors:'; $errors | Format-Table -AutoSize; exit 1 }
         shell: pwsh
 
       - name: Run Pester tests

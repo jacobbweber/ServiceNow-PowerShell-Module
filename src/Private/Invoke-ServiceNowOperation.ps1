@@ -11,7 +11,7 @@
     return $script:ServiceNowOperations.operations.$Key
 }
 
-function Replace-Tokens {
+function Convert-ServiceNowTokens {
     param(
         [Parameter(Mandatory=$true)][object]$Template,
         [Parameter()][hashtable]$Params
@@ -28,13 +28,13 @@ function Replace-Tokens {
         $result = @{}
         foreach ($p in $Template.PSObject.Properties) {
             $val = $p.Value
-            $newVal = Replace-Tokens -Template $val -Params $Params
+            $newVal = Convert-ServiceNowTokens -Template $val -Params $Params
             $result[$p.Name] = $newVal
         }
         return $result
     }
     if ($Template -is [object[]]) {
-        return $Template | ForEach-Object { Replace-Tokens -Template $_ -Params $Params }
+        return $Template | ForEach-Object { Convert-ServiceNowTokens -Template $_ -Params $Params }
     }
     return $Template
 }
@@ -49,7 +49,7 @@ function Build-QueryString {
     )
     $qsPairs = @{}
     if ($Operation.query) {
-        $templ = Replace-Tokens -Template $Operation.query -Params $Params
+        $templ = Convert-ServiceNowTokens -Template $Operation.query -Params $Params
         foreach ($p in $templ.Keys) { if ($null -ne $templ[$p]) { $qsPairs[$p] = $templ[$p] } }
     }
     if ($Options -and $Options.Query) {
@@ -77,7 +77,7 @@ function Build-ServiceNowUri {
     if (-not $base) { throw 'InstanceBaseUri not set. Use Set-ModuleSetting to configure.' }
     $basePath = $script:ServiceNowOperations.basePath
     $pathTemplate = $Operation.path
-    $path = Replace-Tokens -Template $pathTemplate -Params $Params
+    $path = Convert-ServiceNowTokens -Template $pathTemplate -Params $Params
     $qs = Build-QueryString -Operation $Operation -Params $Params -Options $Options
     return ($base.TrimEnd('/') + $basePath + $path + $qs)
 }
@@ -179,7 +179,7 @@ function Build-ServiceNowBody {
         [hashtable]$Params
     )
     if (-not $Operation.body) { return $null }
-    $body = Replace-Tokens -Template $Operation.body -Params $Params
+    $body = Convert-ServiceNowTokens -Template $Operation.body -Params $Params
     return $body
 }
 
